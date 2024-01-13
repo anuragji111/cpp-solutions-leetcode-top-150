@@ -1,0 +1,128 @@
+**Design Add and Search Words Data Structure**
+
+Problem Statement 99) Design a data structure that supports adding new words and finding if a string matches any previously added string.
+
+Implement the WordDictionary class:
+
+WordDictionary() Initializes the object.
+void addWord(word) Adds word to the data structure, it can be matched later.
+bool search(word) Returns true if there is any string in the data structure that matches word or false otherwise. word may contain dots '.' where dots can be matched with any letter.
+ 
+
+Example:
+
+Input
+["WordDictionary","addWord","addWord","addWord","search","search","search","search"]
+[[],["bad"],["dad"],["mad"],["pad"],["bad"],[".ad"],["b.."]]
+Output
+[null,null,null,null,false,true,true,true]
+
+Explanation
+WordDictionary wordDictionary = new WordDictionary();
+wordDictionary.addWord("bad");
+wordDictionary.addWord("dad");
+wordDictionary.addWord("mad");
+wordDictionary.search("pad"); // return False
+wordDictionary.search("bad"); // return True
+wordDictionary.search(".ad"); // return True
+wordDictionary.search("b.."); // return True
+ 
+
+Constraints:
+
+1 <= word.length <= 25
+word in addWord consists of lowercase English letters.
+word in search consist of '.' or lowercase English letters.
+There will be at most 2 dots in word for search queries.
+At most 104 calls will be made to addWord and search.
+
+-----------------------------------------------------------------------------------------
+SOLUTION = class TrieNode {
+public:
+    TrieNode* children[26] = {};  // Array to store children nodes (26 for lowercase letters)
+    bool isEnd = false;          // Flag to indicate end of a word
+};
+
+class WordDictionary {
+public:
+    WordDictionary() {
+        root = new TrieNode();
+    }
+
+    void addWord(string word) {
+        TrieNode* current = root;
+        for (char c : word) {
+            if (!current->children[c - 'a']) {
+                current->children[c - 'a'] = new TrieNode();
+            }
+            current = current->children[c - 'a'];
+        }
+        current->isEnd = true;  // Mark the end of the word
+    }
+
+    bool search(string word) {
+        return searchHelper(root, word, 0);
+    }
+
+private:
+    TrieNode* root;
+
+    bool searchHelper(TrieNode* current, string word, int index) {
+        if (!current) {
+            return false;  // Node not found
+        }
+
+        if (index == word.length()) {
+            return current->isEnd;  // Reached end of word, check if it's a valid word
+        }
+
+        char c = word[index];
+        if (c == '.') {
+            // Recursively try all possible child nodes for '.'
+            for (int i = 0; i < 26; i++) {
+                if (searchHelper(current->children[i], word, index + 1)) {
+                    return true;
+                }
+            }
+            return false;
+        } else {
+            // Continue search with the specific character
+            return searchHelper(current->children[c - 'a'], word, index + 1);
+        }
+    }
+};
+
+-----------------Key Features:
+
+Trie Structure: Efficiently stores words with common prefixes.
+Pattern Matching: Supports searches with the '.' character, representing any single character.
+Recursive Search: searchHelper function explores possible paths within the Trie.
+Code Breakdown:
+
+TrieNode Class: (Same as in the previous explanation)
+
+WordDictionary Class:
+
+addWord: Inserts a word into the Trie.
+search: Initiates the search process with the searchHelper function.
+searchHelper Function:
+
+Recursively traverses the Trie, handling pattern matching with '.' characters.
+Base Cases:
+current == null: Node not found, return false.
+index == word.length(): Reached end of word, check isEnd flag and return true or false.
+Character Check:
+If word[index] is '.':
+Try all possible child nodes recursively.
+Return true if any path succeeds, otherwise false.
+Otherwise, continue search with the specific character.
+Time and Space Complexity:
+
+Insertion: O(L), where L is the length of the word.
+Search: Worst-case O(L * 26^P), where L is the length of the word and P is the number of '.' characters.
+Space: O(N * M), where N is the number of words and M is the average length of the words.
+Advantages:
+
+Efficient storage and retrieval of words with common prefixes.
+Supports pattern matching with '.' characters.
+Useful for implementing features like autocomplete with wildcards.
