@@ -1,0 +1,122 @@
+**Snakes and Ladders**
+
+Problem Statement 95) You are given an n x n integer matrix board where the cells are labeled from 1 to n2 in a Boustrophedon style starting from the bottom left of the board (i.e. board[n - 1][0]) and alternating direction each row.
+
+You start on square 1 of the board. In each move, starting from square curr, do the following:
+
+Choose a destination square next with a label in the range [curr + 1, min(curr + 6, n2)].
+This choice simulates the result of a standard 6-sided die roll: i.e., there are always at most 6 destinations, regardless of the size of the board.
+If next has a snake or ladder, you must move to the destination of that snake or ladder. Otherwise, you move to next.
+The game ends when you reach the square n2.
+A board square on row r and column c has a snake or ladder if board[r][c] != -1. The destination of that snake or ladder is board[r][c]. Squares 1 and n2 do not have a snake or ladder.
+
+Note that you only take a snake or ladder at most once per move. If the destination to a snake or ladder is the start of another snake or ladder, you do not follow the subsequent snake or ladder.
+
+For example, suppose the board is [[-1,4],[-1,3]], and on the first move, your destination square is 2. You follow the ladder to square 3, but do not follow the subsequent ladder to 4.
+Return the least number of moves required to reach the square n2. If it is not possible to reach the square, return -1.
+
+ 
+
+Example 1:
+
+
+Input: board = [[-1,-1,-1,-1,-1,-1],[-1,-1,-1,-1,-1,-1],[-1,-1,-1,-1,-1,-1],[-1,35,-1,-1,13,-1],[-1,-1,-1,-1,-1,-1],[-1,15,-1,-1,-1,-1]]
+Output: 4
+Explanation: 
+In the beginning, you start at square 1 (at row 5, column 0).
+You decide to move to square 2 and must take the ladder to square 15.
+You then decide to move to square 17 and must take the snake to square 13.
+You then decide to move to square 14 and must take the ladder to square 35.
+You then decide to move to square 36, ending the game.
+This is the lowest possible number of moves to reach the last square, so return 4.
+Example 2:
+
+Input: board = [[-1,-1],[-1,3]]
+Output: 1
+ 
+
+Constraints:
+
+n == board.length == board[i].length
+2 <= n <= 20
+board[i][j] is either -1 or in the range [1, n2].
+The squares labeled 1 and n2 do not have any ladders or snakes.
+
+--------------------------------------------------------------------------------------
+SOLUTION = class Solution {
+public:
+    int snakesAndLadders(vector<vector<int>> &board) {
+        int n = board.size(), lbl = 1;
+        vector<pair<int, int>> cells(n*n+1);
+        vector<int> columns(n);
+        iota(columns.begin(), columns.end(), 0);
+        for (int row = n - 1; row >= 0; row--) {
+            for (int column : columns) {
+                cells[lbl++] = {row, column};
+            }
+            reverse(columns.begin(), columns.end());
+        }
+        vector<int> dist(n*n+1, -1);
+        dist[1] = 0;
+        queue<int> q;
+        q.push(1);
+        while (!q.empty()) {
+            int curr = q.front();
+            q.pop();
+            for (int next = curr + 1; next <= min(curr+6, n*n); next++) {
+                auto [row, column] = cells[next];
+                int destination = board[row][column] != -1 ? board[row][column] : next;
+                if (dist[destination] == -1) {
+                    dist[destination] = dist[curr] + 1;
+                    q.push(destination);
+                }
+            }
+        }
+        return dist[n*n];
+    }
+};
+
+-------------------------Problem:
+
+Given a board represented as a 2D array with special cells:
+-1: Normal cells
+Positive integers: Ladders (move to that destination)
+Negative integers: Snakes (move to that destination)
+Find the minimum number of moves to reach the final cell (n*n) from the starting cell (1).
+Key Points:
+
+Board Mapping: The cells vector maps cell numbers to their (row, column) coordinates, handling the zig-zag pattern of the board.
+Distance Tracking: The dist vector stores the minimum distance (number of moves) to reach each cell.
+BFS Exploration: BFS iteratively explores reachable cells, updating distances as it progresses.
+Snakes and Ladders: The code handles snakes and ladders by directly moving to their destinations.
+Explanation:
+
+Board Mapping:
+
+Creates a cells vector to map cell numbers to their coordinates, accounting for the board's pattern.
+Distance Initialization:
+
+Initializes dist with -1 for all cells, indicating unvisited cells.
+Sets the starting cell's distance to 0.
+BFS Algorithm:
+
+Uses a queue to perform BFS.
+Enqueues the starting cell (1).
+While the queue is not empty:
+Dequeues the current cell.
+Explores possible next cells (up to 6 cells ahead):
+Maps the next cell number to its coordinates using cells.
+Checks for snakes/ladders:
+If a snake/ladder, uses its destination as the next cell.
+If the next cell hasn't been visited yet:
+Updates its distance in dist.
+Enqueues it for further exploration.
+Result:
+
+Returns the minimum distance to reach the final cell (dist[n*n]).
+Time Complexity:
+
+O(N^2), where N is the board size, due to BFS potentially visiting each cell and exploring up to 6 next cells.
+Space Complexity:
+
+O(N^2) for the cells and dist vectors, as well as the queue.
