@@ -33,79 +33,68 @@ board and word consists of only lowercase and uppercase English letters.
 
 -----------------------------------------------------------------------------------------------
 SOLUTION = 
-bool starts_with(int r, int c, char **board, int boardSize,
-                 int* boardColSize, char * word)
-{
-    if (strlen(word) == 0)
-        return true;
-    
-    if (r < 0 || r >= boardSize)
-        return false;
-    
-    if (c < 0 || c >= boardColSize[0])
-        return false;
-    
-    if (board[r][c] != word[0])
-        return false;
-    
-    bool res;
-    char old = word[0];
+class Solution {
+public:
+    bool exist(vector<vector<char>>& board, string word) {
+        int m = board.size(), n = board[0].size();
+        vector<vector<bool>> visited(m, vector<bool>(n, false));
 
-    board[r][c] = '_';
-    if (starts_with(r - 1, c, board, boardSize, boardColSize, &word[1]))
-        return true;
-    if (starts_with(r + 1, c, board, boardSize, boardColSize, &word[1]))
-        return true;
-    if (starts_with(r, c - 1, board, boardSize, boardColSize, &word[1]))
-        return true;
-    if (starts_with(r, c + 1, board, boardSize, boardColSize, &word[1]))
-        return true;
-    board[r][c] = old;
-    
-    return false;
-}
-
-bool exist(char** board, int boardSize, int* boardColSize, char * word)
-{
-    int r, c;
-    
-    for (r = 0; r < boardSize; r++) {
-        for (c = 0; c < boardColSize[0]; c++) {
-            if (starts_with(r, c, board, boardSize, boardColSize, word))
-                return true;
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (backtrack(board, word, i, j, 0, visited)) {
+                    return true;
+                }
+            }
         }
+        return false;
     }
-    
-    return false;
-}
 
---------------------------Explanations :- 
-Key Features:
+private:
+    bool backtrack(vector<vector<char>>& board, string& word, int i, int j, int index, vector<vector<bool>>& visited) {
+        if (index == word.size()) return true;
+        if (i < 0 || i >= board.size() || j < 0 || j >= board[0].size() || visited[i][j] || board[i][j] != word[index]) {
+            return false;
+        }
+
+        visited[i][j] = true;
+        bool found = backtrack(board, word, i + 1, j, index + 1, visited) ||
+                      backtrack(board, word, i - 1, j, index + 1, visited) ||
+                      backtrack(board, word, i, j + 1, index + 1, visited) ||
+                      backtrack(board, word, i, j - 1, index + 1, visited);
+
+        visited[i][j] = false; // Backtrack
+        return found;
+    }
+};
+
+--------------------------------------Explanations:-
+ Key Features:
 
 Backtracking: Explores possible word paths recursively, backtracking when necessary.
-Temporary Marking: Overwrites characters on the board to prevent revisiting cells and forming circular paths.
+Visited Array: Prevents revisiting cells and forming circular paths.
 Code Breakdown:
 
-1. starts_with Function (Recursive Helper):
+1. exist Function (Main Function):
+
+Initializes a visited array to track visited cells.
+Iterates through each cell in the board:
+If backtrack returns true for a cell, the word exists; return true.
+If no valid path is found, return false.
+2. backtrack Function (Recursive Helper):
 
 Base Cases:
-If word is empty, a valid path has been found; return true.
-If (r, c) is out of bounds or doesn't match word[0], return false.
+If the index reaches the end of the word, a valid path has been found; return true.
+If the current cell is out of bounds, already visited, or doesn't match the current word character, return false.
 Recursive Steps:
-Temporarily overwrite the current character on the board.
-Recursively call starts_with for each adjacent cell:
-Up (r - 1, c)
-Down (r + 1, c)
-Left (r, c - 1)
-Right (r, c + 1)
-Backtrack (restore the original character on the board).
-If all recursive calls fail, return false.
-2. exist Function (Main Function):
-
-Iterates through each cell in the board:
-If starts_with returns true for a cell, the word exists; return true.
-If no valid path is found, return false.
+Mark the current cell as visited.
+Recursively call backtrack for each adjacent cell:
+Up (i - 1, j)
+Down (i + 1, j)
+Left (i, j - 1)
+Right (i, j + 1)
+Backtrack (unmark the current cell as visited).
+Return true if any of the recursive calls found a valid path, false otherwise.
 Time and Space Complexity:
 
 Time: Worst-case O(M * N * 4^L), where M is board rows, N is board columns, and L is word length.
-Space: O(L) for recursion stack depth (due to the depth of the backtracking search).word
+Space: O(M * N) for visited array and O(L) for recursion stack depth.
